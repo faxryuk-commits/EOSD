@@ -11,19 +11,25 @@ import { MRRChart } from '@/components/charts/MRRChart'
 import { RegionChart } from '@/components/charts/RegionChart'
 
 async function getDashboardData() {
-  // Get current period (January 2026)
+  // Get latest period (dynamic)
   const currentPeriod = await prisma.period.findFirst({
-    where: { year: 2026, month: 1 },
-  })
-
-  // Get previous period
-  const previousPeriod = await prisma.period.findFirst({
-    where: { year: 2025, month: 12 },
+    orderBy: [{ year: 'desc' }, { month: 'desc' }],
   })
 
   if (!currentPeriod) {
     return null
   }
+
+  // Get previous period
+  const previousPeriod = await prisma.period.findFirst({
+    where: {
+      OR: [
+        { year: currentPeriod.year, month: { lt: currentPeriod.month } },
+        { year: { lt: currentPeriod.year } },
+      ],
+    },
+    orderBy: [{ year: 'desc' }, { month: 'desc' }],
+  })
 
   // Get monthly data for current period
   const currentData = await prisma.monthlyData.findMany({
