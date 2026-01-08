@@ -88,6 +88,28 @@ export default function IntegrationsPage() {
     ))
   }
 
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
+
+  const saveConfig = async () => {
+    setSaving(true)
+    try {
+      const response = await fetch('/api/settings/integrations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ config, metrics }),
+      })
+      if (response.ok) {
+        setSaved(true)
+        setTimeout(() => setSaved(false), 3000)
+      }
+    } catch (error) {
+      console.error('Failed to save:', error)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const targetFields = [
     { value: 'activeClients', label: 'Активные клиенты' },
     { value: 'newClients', label: 'Новые клиенты' },
@@ -211,9 +233,19 @@ export default function IntegrationsPage() {
               )}
               Тест подключения
             </button>
-            <button className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors">
-              <Save size={18} />
-              Сохранить
+            <button 
+              onClick={saveConfig}
+              disabled={saving}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors disabled:opacity-50"
+            >
+              {saving ? (
+                <RefreshCw size={18} className="animate-spin" />
+              ) : saved ? (
+                <Check size={18} />
+              ) : (
+                <Save size={18} />
+              )}
+              {saving ? 'Сохранение...' : saved ? 'Сохранено!' : 'Сохранить'}
             </button>
           </div>
         </CardContent>
