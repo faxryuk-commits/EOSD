@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { TrendingUp, TrendingDown, Minus } from 'lucide-react'
+import { TrendingUp, TrendingDown, Minus, HelpCircle } from 'lucide-react'
 
 interface StatCardProps {
   title: string
@@ -10,6 +10,7 @@ interface StatCardProps {
   trend?: 'up' | 'down' | 'flat'
   status?: 'good' | 'warning' | 'critical'
   className?: string
+  tooltip?: string
 }
 
 export function StatCard({
@@ -21,6 +22,7 @@ export function StatCard({
   trend,
   status = 'good',
   className,
+  tooltip,
 }: StatCardProps) {
   const statusColors = {
     good: 'border-green-500/30 bg-green-500/5',
@@ -49,7 +51,17 @@ export function StatCard({
       )}
     >
       <div className="flex items-start justify-between mb-3">
-        <span className="text-sm text-surface-400">{title}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-sm text-surface-400">{title}</span>
+          {tooltip && (
+            <div className="relative group">
+              <HelpCircle className="w-3.5 h-3.5 text-surface-500 hover:text-surface-300 cursor-help" />
+              <div className="absolute z-50 hidden group-hover:block w-64 p-2 text-xs text-white bg-slate-800 rounded-lg shadow-lg -top-2 left-6 border border-slate-700">
+                {tooltip}
+              </div>
+            </div>
+          )}
+        </div>
         {icon && (
           <div className="p-2 rounded-lg bg-surface-700/50">
             {icon}

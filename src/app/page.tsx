@@ -160,6 +160,7 @@ export default async function Dashboard() {
           trend={metrics.mrrChange > 0 ? 'up' : metrics.mrrChange < 0 ? 'down' : 'flat'}
           icon={<DollarSign size={20} className="text-green-500" />}
           status="good"
+          tooltip="Monthly Recurring Revenue — ежемесячный повторяющийся доход от подписок. Ключевой показатель SaaS."
         />
         <StatCard
           title="Profit"
@@ -167,6 +168,7 @@ export default async function Dashboard() {
           changeLabel={`Margin ${formatPercent(metrics.margin)}`}
           icon={<TrendingDown size={20} className="text-green-500" />}
           status="good"
+          tooltip="Чистая прибыль = Выручка - Все расходы. Margin показывает процент прибыли от выручки."
         />
         <StatCard
           title="Clients"
@@ -174,6 +176,7 @@ export default async function Dashboard() {
           changeLabel={`+${metrics.newClients} new`}
           icon={<Users size={20} className="text-blue-500" />}
           status="good"
+          tooltip="Общее количество активных клиентов. New — количество новых клиентов за месяц."
         />
         <StatCard
           title="Runway"
@@ -181,6 +184,7 @@ export default async function Dashboard() {
           changeLabel={`Cash: ${formatCompact(metrics.cash)}`}
           icon={<Timer size={20} className="text-purple-500" />}
           status={metrics.runway > 12 ? 'good' : metrics.runway > 6 ? 'warning' : 'critical'}
+          tooltip="Количество месяцев, на которые хватит денег при текущем темпе расходов. Здоровый показатель > 12 мес."
         />
       </div>
 
@@ -190,22 +194,26 @@ export default async function Dashboard() {
           title="ARPU"
           value={formatCurrency(metrics.arpu)}
           status="good"
+          tooltip="Average Revenue Per User — средний доход на клиента. ARPU = MRR / Количество клиентов."
         />
         <StatCard
           title="CAC"
           value={formatCurrency(metrics.cac)}
           status="good"
+          tooltip="Customer Acquisition Cost — стоимость привлечения клиента. CAC = Маркетинг / Новые клиенты."
         />
         <StatCard
           title="LTV"
           value={formatCurrency(Math.round(metrics.ltv))}
           status="good"
+          tooltip="Lifetime Value — пожизненная ценность клиента. Сколько денег приносит клиент за всё время работы с компанией."
         />
         <StatCard
           title="LTV/CAC"
           value={`${metrics.ltvCac.toFixed(1)}x`}
           changeLabel={metrics.ltvCac >= 3 ? '✅ Healthy' : '⚠️ Below target'}
           status={metrics.ltvCac >= 3 ? 'good' : 'warning'}
+          tooltip="Соотношение ценности клиента к стоимости привлечения. Здоровый показатель > 3x. Показывает эффективность маркетинга."
         />
       </div>
 

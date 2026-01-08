@@ -17,6 +17,7 @@ import {
   Settings,
   ChevronDown,
   Upload,
+  Database,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
@@ -99,6 +100,10 @@ const navigation: NavItem[] = [
     label: 'Настройки',
     href: '/settings',
     icon: <Settings size={20} />,
+    children: [
+      { label: 'Общие', href: '/settings', icon: <Settings size={18} /> },
+      { label: 'Интеграции', href: '/settings/integrations', icon: <Database size={18} /> },
+    ],
   },
 ]
 
