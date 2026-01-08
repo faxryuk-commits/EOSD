@@ -130,15 +130,13 @@ export async function POST(request: NextRequest) {
           const updateData: any = {}
           
           if (metricName.includes('mrr') || metricName === 'mrr') {
-            updateData.mrr = value
+            updateData.revenue = value
           } else if (metricName.includes('active') && metricName.includes('client')) {
-            updateData.activeClients = Math.round(value)
+            updateData.clientsCount = Math.round(value)
           } else if (metricName.includes('new') && metricName.includes('client')) {
             updateData.newClients = Math.round(value)
           } else if (metricName.includes('churn') && metricName.includes('client')) {
-            updateData.churnClients = Math.round(value)
-          } else if (metricName.includes('arpu')) {
-            updateData.arpu = value
+            updateData.churnedClients = Math.round(value)
           }
           
           if (Object.keys(updateData).length > 0) {

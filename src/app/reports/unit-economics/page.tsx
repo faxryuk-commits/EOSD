@@ -21,11 +21,11 @@ async function getUnitEconomicsData() {
   const byPeriod = periods.map(period => {
     const data = monthlyData.filter(d => d.periodId === period.id)
     
-    const totalMRR = data.reduce((sum, d) => sum + (d.mrr || 0), 0)
-    const totalActiveClients = data.reduce((sum, d) => sum + (d.activeClients || 0), 0)
+    const totalMRR = data.reduce((sum, d) => sum + (d.revenue || 0), 0)
+    const totalActiveClients = data.reduce((sum, d) => sum + (d.clientsCount || 0), 0)
     const totalNewClients = data.reduce((sum, d) => sum + (d.newClients || 0), 0)
-    const totalChurnClients = data.reduce((sum, d) => sum + (d.churnClients || 0), 0)
-    const totalMarketingCosts = data.reduce((sum, d) => sum + (d.marketingCosts || 0), 0)
+    const totalChurnClients = data.reduce((sum, d) => sum + (d.churnedClients || 0), 0)
+    const totalMarketingCosts = data.reduce((sum, d) => sum + (d.marketing || 0), 0)
     
     const arpu = totalActiveClients > 0 ? totalMRR / totalActiveClients : 0
     const churnRate = totalActiveClients > 0 ? (totalChurnClients / totalActiveClients) * 100 : 0

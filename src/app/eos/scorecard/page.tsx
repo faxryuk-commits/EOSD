@@ -21,10 +21,10 @@ async function getScorecardData() {
   const currentPeriod = periods[0]
   const currentData = monthlyData.filter(d => d.periodId === currentPeriod?.id)
   
-  const totalMRR = currentData.reduce((sum, d) => sum + (d.mrr || 0), 0)
-  const totalClients = currentData.reduce((sum, d) => sum + (d.activeClients || 0), 0)
+  const totalMRR = currentData.reduce((sum, d) => sum + (d.revenue || 0), 0)
+  const totalClients = currentData.reduce((sum, d) => sum + (d.clientsCount || 0), 0)
   const totalNewClients = currentData.reduce((sum, d) => sum + (d.newClients || 0), 0)
-  const totalChurn = currentData.reduce((sum, d) => sum + (d.churnClients || 0), 0)
+  const totalChurn = currentData.reduce((sum, d) => sum + (d.churnedClients || 0), 0)
 
   return {
     periods,

@@ -35,10 +35,10 @@ async function getPlanFactData() {
     const fact = monthlyData.find(d => d.regionId === region.id)
     const plan = budgetPlans.find(p => p.regionId === region.id)
 
-    const planMRR = plan?.plannedRevenue || (fact?.mrr || 0) * 1.1 // Default: fact + 10%
-    const factMRR = fact?.mrr || 0
-    const planClients = plan?.plannedClients || (fact?.activeClients || 0)
-    const factClients = fact?.activeClients || 0
+    const planMRR = plan?.plannedRevenue || (fact?.revenue || 0) * 1.1 // Default: fact + 10%
+    const factMRR = fact?.revenue || 0
+    const planClients = plan?.plannedClients || (fact?.clientsCount || 0)
+    const factClients = fact?.clientsCount || 0
 
     const mrrCompletion = planMRR > 0 ? (factMRR / planMRR) * 100 : 0
     const clientsCompletion = planClients > 0 ? (factClients / planClients) * 100 : 0
