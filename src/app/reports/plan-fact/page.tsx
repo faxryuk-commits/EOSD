@@ -119,7 +119,7 @@ export default async function PlanFactPage() {
             <ProgressBar 
               value={Math.min(totalMRRCompletion, 100)} 
               className="mt-2"
-              color={totalMRRCompletion >= 100 ? 'emerald' : totalMRRCompletion >= 80 ? 'amber' : 'red'}
+              color={totalMRRCompletion >= 100 ? 'green' : totalMRRCompletion >= 80 ? 'yellow' : 'red'}
             />
           </CardContent>
         </Card>
@@ -140,7 +140,7 @@ export default async function PlanFactPage() {
             <ProgressBar 
               value={Math.min(totalClientsCompletion, 100)} 
               className="mt-2"
-              color={totalClientsCompletion >= 100 ? 'emerald' : totalClientsCompletion >= 80 ? 'amber' : 'red'}
+              color={totalClientsCompletion >= 100 ? 'green' : totalClientsCompletion >= 80 ? 'yellow' : 'red'}
             />
           </CardContent>
         </Card>

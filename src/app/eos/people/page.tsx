@@ -82,8 +82,8 @@ export default function PeopleAnalyzerPage() {
 
   const getGWCStatus = (person: Person) => {
     const gwcScore = [person.getsIt, person.wantsIt, person.capacityToDoIt].filter(Boolean).length
-    if (gwcScore === 3) return { status: 'A-Player', color: 'emerald' }
-    if (gwcScore === 2) return { status: 'B-Player', color: 'amber' }
+    if (gwcScore === 3) return { status: 'A-Player', color: 'green' }
+    if (gwcScore === 2) return { status: 'B-Player', color: 'yellow' }
     return { status: 'C-Player', color: 'red' }
   }
 
