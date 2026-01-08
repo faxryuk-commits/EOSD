@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { prisma } from '@/lib/db'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { formatCurrency, formatPercent } from '@/lib/utils'
-import { Download, Printer } from 'lucide-react'
+import { ExportButtons } from '@/components/ExportButtons'
 
 async function getPLData() {
   // Get last 4 months + current
@@ -108,16 +108,7 @@ export default async function PLReportPage() {
           <h1 className="text-3xl font-bold text-white mb-1">📈 P&L Report</h1>
           <p className="text-surface-400">Отчёт о прибылях и убытках</p>
         </div>
-        <div className="flex items-center gap-3">
-          <button className="btn-secondary flex items-center gap-2">
-            <Download size={18} />
-            Export
-          </button>
-          <button className="btn-secondary flex items-center gap-2">
-            <Printer size={18} />
-            Print
-          </button>
-        </div>
+        <ExportButtons title="pl-report" />
       </div>
 
       {/* P&L Table */}

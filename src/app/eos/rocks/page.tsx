@@ -5,7 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
-import { Plus, Target, Check, AlertCircle } from 'lucide-react'
+import { Target } from 'lucide-react'
+import { AddRockButton } from '@/components/forms/AddRockForm'
 
 async function getRocksData() {
   const rocks = await prisma.rock.findMany({
@@ -36,10 +37,7 @@ export default async function RocksPage() {
           <h1 className="text-3xl font-bold text-white mb-1">🎯 Rocks Q1 2026</h1>
           <p className="text-surface-400">Квартальные приоритеты компании</p>
         </div>
-        <button className="btn-primary flex items-center gap-2">
-          <Plus size={18} />
-          Добавить Rock
-        </button>
+        <AddRockButton />
       </div>
 
       {/* Stats */}
@@ -132,7 +130,9 @@ export default async function RocksPage() {
             <div className="text-center py-12 text-surface-400">
               <Target size={48} className="mx-auto mb-4 opacity-50" />
               <p>Нет Rocks на этот квартал</p>
-              <button className="btn-primary mt-4">Добавить первый Rock</button>
+              <div className="mt-4">
+                <AddRockButton />
+              </div>
             </div>
           )}
         </CardContent>

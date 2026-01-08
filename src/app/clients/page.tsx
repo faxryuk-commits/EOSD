@@ -4,7 +4,8 @@ import { prisma } from '@/lib/db'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatCurrency } from '@/lib/utils'
-import { Plus, Users, TrendingDown, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
+import { Users, TrendingDown, AlertCircle, CheckCircle, XCircle } from 'lucide-react'
+import { AddClientButton } from '@/components/forms/AddClientForm'
 
 async function getClientsData() {
   const clients = await prisma.topClient.findMany({
@@ -62,10 +63,7 @@ export default async function TopClientsPage() {
           <h1 className="text-3xl font-bold text-white mb-1">🏆 TOP Clients Health Check</h1>
           <p className="text-surface-400">Мониторинг ключевых клиентов</p>
         </div>
-        <button className="btn-primary flex items-center gap-2">
-          <Plus size={18} />
-          Добавить клиента
-        </button>
+        <AddClientButton />
       </div>
 
       {/* Stats */}

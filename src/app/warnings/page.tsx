@@ -4,7 +4,8 @@ import { prisma } from '@/lib/db'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
 import { formatDate } from '@/lib/utils'
-import { Plus, AlertTriangle, Shield, TrendingDown, Users, Cpu, Scale } from 'lucide-react'
+import { AlertTriangle, Shield, TrendingDown, Users, Cpu, Scale } from 'lucide-react'
+import { AddWarningButton } from '@/components/forms/AddWarningForm'
 
 async function getWarningsData() {
   const warnings = await prisma.warning.findMany({
@@ -56,10 +57,7 @@ export default async function WarningsPage() {
           <h1 className="text-3xl font-bold text-white mb-1">⚠️ Warning List</h1>
           <p className="text-surface-400">Реестр рисков и проблем</p>
         </div>
-        <button className="btn-primary flex items-center gap-2">
-          <Plus size={18} />
-          Добавить риск
-        </button>
+        <AddWarningButton />
       </div>
 
       {/* Risk Matrix Summary */}
