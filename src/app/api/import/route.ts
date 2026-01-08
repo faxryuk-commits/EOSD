@@ -142,20 +142,28 @@ export async function POST(request: NextRequest) {
           }
           
           if (Object.keys(updateData).length > 0) {
-            await prisma.monthlyData.upsert({
+            // Find existing or create new
+            const existing = await prisma.monthlyData.findFirst({
               where: {
-                regionId_periodId: {
-                  regionId: currentRegion.id,
-                  periodId: period.id
-                }
-              },
-              update: updateData,
-              create: {
                 regionId: currentRegion.id,
-                periodId: period.id,
-                ...updateData
+                periodId: period.id
               }
             })
+            
+            if (existing) {
+              await prisma.monthlyData.update({
+                where: { id: existing.id },
+                data: updateData
+              })
+            } else {
+              await prisma.monthlyData.create({
+                data: {
+                  regionId: currentRegion.id,
+                  periodId: period.id,
+                  ...updateData
+                }
+              })
+            }
             importedRows++
           }
         }
@@ -224,20 +232,27 @@ export async function POST(request: NextRequest) {
           // Update all regions with this expense (distributed equally or use first region)
           const firstRegion = dbRegions[0]
           if (firstRegion) {
-            await prisma.monthlyData.upsert({
+            const existingExpense = await prisma.monthlyData.findFirst({
               where: {
-                regionId_periodId: {
-                  regionId: firstRegion.id,
-                  periodId: period.id
-                }
-              },
-              update: { [fieldName]: value },
-              create: {
                 regionId: firstRegion.id,
-                periodId: period.id,
-                [fieldName]: value
+                periodId: period.id
               }
             })
+            
+            if (existingExpense) {
+              await prisma.monthlyData.update({
+                where: { id: existingExpense.id },
+                data: { [fieldName]: value }
+              })
+            } else {
+              await prisma.monthlyData.create({
+                data: {
+                  regionId: firstRegion.id,
+                  periodId: period.id,
+                  [fieldName]: value
+                }
+              })
+            }
             expenseRows++
           }
         }
