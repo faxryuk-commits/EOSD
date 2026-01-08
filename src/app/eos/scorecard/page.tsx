@@ -193,7 +193,7 @@ export default async function ScorecardPage() {
                            `${metric.actual}${metric.unit}`}
                         </td>
                         <td className="py-3 px-4 text-center">
-                          <Badge variant={isOnTarget ? 'success' : 'danger'}>
+                          <Badge variant={isOnTarget ? 'green' : 'red'}>
                             {isOnTarget ? '✓' : '✗'} {Math.round(percentage)}%
                           </Badge>
                         </td>

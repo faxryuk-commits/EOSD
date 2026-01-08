@@ -180,7 +180,7 @@ export default async function PlanFactPage() {
                     <td className="py-3 px-4 text-right text-slate-400">{formatCurrency(item.planMRR)}</td>
                     <td className="py-3 px-4 text-right text-white">{formatCurrency(item.factMRR)}</td>
                     <td className="py-3 px-4 text-right">
-                      <Badge variant={item.mrrCompletion >= 100 ? 'success' : item.mrrCompletion >= 80 ? 'warning' : 'danger'}>
+                      <Badge variant={item.mrrCompletion >= 100 ? 'green' : item.mrrCompletion >= 80 ? 'yellow' : 'red'}>
                         {item.mrrCompletion.toFixed(0)}%
                       </Badge>
                     </td>
@@ -190,7 +190,7 @@ export default async function PlanFactPage() {
                     <td className="py-3 px-4 text-right text-slate-400">{item.planClients}</td>
                     <td className="py-3 px-4 text-right text-white">{item.factClients}</td>
                     <td className="py-3 px-4 text-right">
-                      <Badge variant={item.clientsCompletion >= 100 ? 'success' : item.clientsCompletion >= 80 ? 'warning' : 'danger'}>
+                      <Badge variant={item.clientsCompletion >= 100 ? 'green' : item.clientsCompletion >= 80 ? 'yellow' : 'red'}>
                         {item.clientsCompletion.toFixed(0)}%
                       </Badge>
                     </td>
@@ -203,7 +203,7 @@ export default async function PlanFactPage() {
                   <td className="py-3 px-4 text-right text-slate-400">{formatCurrency(totals.planMRR)}</td>
                   <td className="py-3 px-4 text-right text-white">{formatCurrency(totals.factMRR)}</td>
                   <td className="py-3 px-4 text-right">
-                    <Badge variant={totalMRRCompletion >= 100 ? 'success' : totalMRRCompletion >= 80 ? 'warning' : 'danger'}>
+                    <Badge variant={totalMRRCompletion >= 100 ? 'green' : totalMRRCompletion >= 80 ? 'yellow' : 'red'}>
                       {totalMRRCompletion.toFixed(0)}%
                     </Badge>
                   </td>
@@ -213,7 +213,7 @@ export default async function PlanFactPage() {
                   <td className="py-3 px-4 text-right text-slate-400">{totals.planClients}</td>
                   <td className="py-3 px-4 text-right text-white">{totals.factClients}</td>
                   <td className="py-3 px-4 text-right">
-                    <Badge variant={totalClientsCompletion >= 100 ? 'success' : totalClientsCompletion >= 80 ? 'warning' : 'danger'}>
+                    <Badge variant={totalClientsCompletion >= 100 ? 'green' : totalClientsCompletion >= 80 ? 'yellow' : 'red'}>
                       {totalClientsCompletion.toFixed(0)}%
                     </Badge>
                   </td>

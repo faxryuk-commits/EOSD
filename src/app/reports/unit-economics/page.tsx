@@ -193,7 +193,7 @@ export default async function UnitEconomicsPage() {
                     <td className="py-3 px-4 text-right text-purple-400">{formatCurrency(item.cac)}</td>
                     <td className="py-3 px-4 text-right text-emerald-400">{formatCurrency(Math.round(item.ltv))}</td>
                     <td className="py-3 px-4 text-right">
-                      <Badge variant={item.churnRate <= 5 ? 'success' : item.churnRate <= 10 ? 'warning' : 'danger'}>
+                      <Badge variant={item.churnRate <= 5 ? 'green' : item.churnRate <= 10 ? 'yellow' : 'red'}>
                         {formatPercent(item.churnRate / 100)}
                       </Badge>
                     </td>

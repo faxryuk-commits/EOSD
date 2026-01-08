@@ -119,8 +119,8 @@ export default function IntegrationsPage() {
               ClickHouse
             </CardTitle>
             <Badge variant={
-              connectionStatus === 'connected' ? 'success' : 
-              connectionStatus === 'testing' ? 'warning' : 'secondary'
+              connectionStatus === 'connected' ? 'green' : 
+              connectionStatus === 'testing' ? 'yellow' : 'gray'
             }>
               {connectionStatus === 'connected' ? '✓ Подключено' : 
                connectionStatus === 'testing' ? '⏳ Проверка...' : '✗ Не подключено'}
@@ -317,7 +317,7 @@ export default function IntegrationsPage() {
                       <h4 className={`font-medium ${metric.enabled ? 'text-white' : 'text-slate-500'}`}>
                         {metric.name}
                       </h4>
-                      <Badge variant={metric.enabled ? 'success' : 'secondary'}>
+                      <Badge variant={metric.enabled ? 'green' : 'gray'}>
                         → {targetFields.find(f => f.value === metric.targetField)?.label || metric.targetField}
                       </Badge>
                     </div>

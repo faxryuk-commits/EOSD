@@ -165,7 +165,7 @@ export default function SettingsPage() {
                     <span className="text-white">{region.name}</span>
                     <span className="text-slate-500 text-sm uppercase">{region.code}</span>
                   </div>
-                  <Badge variant={region.active ? 'success' : 'secondary'}>
+                  <Badge variant={region.active ? 'green' : 'gray'}>
                     {region.active ? 'Активен' : 'Неактивен'}
                   </Badge>
                 </div>

@@ -231,8 +231,8 @@ export default function PeopleAnalyzerPage() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         <Badge variant={
-                          rightPerson === 'right' ? 'success' : 
-                          rightPerson === 'developing' ? 'warning' : 'danger'
+                          rightPerson === 'right' ? 'green' : 
+                          rightPerson === 'developing' ? 'yellow' : 'red'
                         }>
                           {gwcStatus.status}
                         </Badge>
