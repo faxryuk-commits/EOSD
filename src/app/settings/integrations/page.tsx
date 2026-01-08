@@ -3,15 +3,96 @@
 import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Badge } from '@/components/ui/Badge'
-import { Database, Server, Key, RefreshCw, Check, X, Plus, Trash2, Save, TestTube, HelpCircle } from 'lucide-react'
+import { Database, Server, Key, RefreshCw, Check, X, Plus, Trash2, Save, TestTube, ArrowRight, Table, Columns } from 'lucide-react'
 
-interface ClickHouseMetric {
+interface MetricMapping {
   id: string
-  name: string
-  query: string
+  sourceTable: string
+  sourceField: string
+  aggregation: 'sum' | 'count' | 'avg' | 'max' | 'min' | 'last'
   targetField: string
   enabled: boolean
 }
+
+// Предустановленные таблицы и поля из типичной ClickHouse структуры
+const availableTables = [
+  {
+    name: 'orders',
+    label: '📦 Заказы',
+    fields: [
+      { name: 'id', label: 'ID заказа', type: 'count' },
+      { name: 'amount', label: 'Сумма заказа', type: 'sum' },
+      { name: 'user_id', label: 'ID клиента', type: 'count_distinct' },
+      { name: 'status', label: 'Статус', type: 'count' },
+      { name: 'created_at', label: 'Дата создания', type: 'date' },
+    ]
+  },
+  {
+    name: 'users',
+    label: '👥 Пользователи',
+    fields: [
+      { name: 'id', label: 'ID пользователя', type: 'count' },
+      { name: 'email', label: 'Email', type: 'count' },
+      { name: 'created_at', label: 'Дата регистрации', type: 'date' },
+      { name: 'last_active', label: 'Последняя активность', type: 'date' },
+      { name: 'subscription_mrr', label: 'MRR подписки', type: 'sum' },
+    ]
+  },
+  {
+    name: 'payments',
+    label: '💳 Платежи',
+    fields: [
+      { name: 'id', label: 'ID платежа', type: 'count' },
+      { name: 'amount', label: 'Сумма', type: 'sum' },
+      { name: 'user_id', label: 'ID клиента', type: 'count_distinct' },
+      { name: 'status', label: 'Статус', type: 'count' },
+      { name: 'created_at', label: 'Дата', type: 'date' },
+    ]
+  },
+  {
+    name: 'events',
+    label: '📊 События',
+    fields: [
+      { name: 'user_id', label: 'Уникальные пользователи', type: 'count_distinct' },
+      { name: 'event_name', label: 'Название события', type: 'count' },
+      { name: 'timestamp', label: 'Время', type: 'date' },
+      { name: 'properties', label: 'Свойства', type: 'json' },
+    ]
+  },
+  {
+    name: 'subscriptions',
+    label: '📋 Подписки',
+    fields: [
+      { name: 'id', label: 'ID подписки', type: 'count' },
+      { name: 'user_id', label: 'ID клиента', type: 'count_distinct' },
+      { name: 'mrr', label: 'MRR', type: 'sum' },
+      { name: 'status', label: 'Статус (active/churned)', type: 'count' },
+      { name: 'started_at', label: 'Дата начала', type: 'date' },
+      { name: 'ended_at', label: 'Дата окончания', type: 'date' },
+    ]
+  },
+]
+
+const targetFields = [
+  { value: 'revenue', label: '💰 Выручка (Revenue)', group: 'Финансы' },
+  { value: 'clientsCount', label: '👥 Всего клиентов', group: 'Клиенты' },
+  { value: 'newClients', label: '🆕 Новые клиенты', group: 'Клиенты' },
+  { value: 'churnedClients', label: '📉 Отток клиентов', group: 'Клиенты' },
+  { value: 'marketing', label: '📢 Расходы на маркетинг', group: 'Расходы' },
+  { value: 'salary', label: '👔 Зарплаты', group: 'Расходы' },
+  { value: 'office', label: '🏢 Офис', group: 'Расходы' },
+  { value: 'software', label: '💻 Софт', group: 'Расходы' },
+  { value: 'otherExpenses', label: '📋 Прочие расходы', group: 'Расходы' },
+]
+
+const aggregations = [
+  { value: 'sum', label: 'Сумма (SUM)', icon: '➕' },
+  { value: 'count', label: 'Количество (COUNT)', icon: '🔢' },
+  { value: 'count_distinct', label: 'Уникальные (COUNT DISTINCT)', icon: '🎯' },
+  { value: 'avg', label: 'Среднее (AVG)', icon: '📊' },
+  { value: 'max', label: 'Максимум (MAX)', icon: '⬆️' },
+  { value: 'min', label: 'Минимум (MIN)', icon: '⬇️' },
+]
 
 export default function IntegrationsPage() {
   const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'testing'>('disconnected')
@@ -24,36 +105,37 @@ export default function IntegrationsPage() {
     ssl: true,
   })
   
-  const [metrics, setMetrics] = useState<ClickHouseMetric[]>([
+  const [mappings, setMappings] = useState<MetricMapping[]>([
     {
       id: '1',
-      name: 'Активные клиенты',
-      query: 'SELECT count(DISTINCT user_id) FROM events WHERE date >= today() - 30',
-      targetField: 'activeClients',
+      sourceTable: 'subscriptions',
+      sourceField: 'mrr',
+      aggregation: 'sum',
+      targetField: 'revenue',
       enabled: true,
     },
     {
       id: '2',
-      name: 'Новые клиенты',
-      query: 'SELECT count(DISTINCT user_id) FROM events WHERE event = \'signup\' AND date >= toStartOfMonth(today())',
-      targetField: 'newClients',
-      enabled: true,
-    },
-    {
-      id: '3',
-      name: 'MRR',
-      query: 'SELECT sum(amount) FROM payments WHERE status = \'completed\' AND date >= toStartOfMonth(today())',
-      targetField: 'mrr',
+      sourceTable: 'users',
+      sourceField: 'id',
+      aggregation: 'count',
+      targetField: 'clientsCount',
       enabled: true,
     },
   ])
 
-  const [newMetric, setNewMetric] = useState({ name: '', query: '', targetField: '' })
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [showAddForm, setShowAddForm] = useState(false)
+  const [newMapping, setNewMapping] = useState<Partial<MetricMapping>>({
+    sourceTable: '',
+    sourceField: '',
+    aggregation: 'sum',
+    targetField: '',
+  })
 
   const testConnection = async () => {
     setConnectionStatus('testing')
-    // Simulate connection test
     setTimeout(() => {
       if (config.host && config.username) {
         setConnectionStatus('connected')
@@ -63,41 +145,13 @@ export default function IntegrationsPage() {
     }, 1500)
   }
 
-  const addMetric = () => {
-    if (newMetric.name && newMetric.query && newMetric.targetField) {
-      setMetrics([
-        ...metrics,
-        {
-          id: Date.now().toString(),
-          ...newMetric,
-          enabled: true,
-        },
-      ])
-      setNewMetric({ name: '', query: '', targetField: '' })
-      setShowAddForm(false)
-    }
-  }
-
-  const removeMetric = (id: string) => {
-    setMetrics(metrics.filter(m => m.id !== id))
-  }
-
-  const toggleMetric = (id: string) => {
-    setMetrics(metrics.map(m => 
-      m.id === id ? { ...m, enabled: !m.enabled } : m
-    ))
-  }
-
-  const [saving, setSaving] = useState(false)
-  const [saved, setSaved] = useState(false)
-
   const saveConfig = async () => {
     setSaving(true)
     try {
       const response = await fetch('/api/settings/integrations', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ config, metrics }),
+        body: JSON.stringify({ config, mappings }),
       })
       if (response.ok) {
         setSaved(true)
@@ -110,26 +164,53 @@ export default function IntegrationsPage() {
     }
   }
 
-  const targetFields = [
-    { value: 'activeClients', label: 'Активные клиенты' },
-    { value: 'newClients', label: 'Новые клиенты' },
-    { value: 'churnedClients', label: 'Отток клиентов' },
-    { value: 'mrr', label: 'MRR' },
-    { value: 'revenue', label: 'Выручка' },
-    { value: 'arpu', label: 'ARPU' },
-    { value: 'nps', label: 'NPS Score' },
-    { value: 'dau', label: 'DAU' },
-    { value: 'mau', label: 'MAU' },
-    { value: 'orders', label: 'Заказы' },
-    { value: 'customMetric1', label: 'Custom Metric 1' },
-    { value: 'customMetric2', label: 'Custom Metric 2' },
-  ]
+  const addMapping = () => {
+    if (newMapping.sourceTable && newMapping.sourceField && newMapping.targetField) {
+      setMappings([
+        ...mappings,
+        {
+          id: Date.now().toString(),
+          sourceTable: newMapping.sourceTable,
+          sourceField: newMapping.sourceField,
+          aggregation: newMapping.aggregation as any || 'sum',
+          targetField: newMapping.targetField,
+          enabled: true,
+        },
+      ])
+      setNewMapping({ sourceTable: '', sourceField: '', aggregation: 'sum', targetField: '' })
+      setShowAddForm(false)
+    }
+  }
+
+  const removeMapping = (id: string) => {
+    setMappings(mappings.filter(m => m.id !== id))
+  }
+
+  const toggleMapping = (id: string) => {
+    setMappings(mappings.map(m => 
+      m.id === id ? { ...m, enabled: !m.enabled } : m
+    ))
+  }
+
+  const getTableLabel = (tableName: string) => 
+    availableTables.find(t => t.name === tableName)?.label || tableName
+
+  const getFieldLabel = (tableName: string, fieldName: string) => 
+    availableTables.find(t => t.name === tableName)?.fields.find(f => f.name === fieldName)?.label || fieldName
+
+  const getTargetLabel = (targetField: string) =>
+    targetFields.find(f => f.value === targetField)?.label || targetField
+
+  const getAggregationLabel = (agg: string) =>
+    aggregations.find(a => a.value === agg)?.label || agg
+
+  const selectedTableFields = availableTables.find(t => t.name === newMapping.sourceTable)?.fields || []
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white mb-2">Интеграции</h1>
-        <p className="text-slate-400">Настройка подключений к внешним источникам данных</p>
+        <h1 className="text-2xl font-bold text-white mb-2">🔗 Интеграции</h1>
+        <p className="text-slate-400">Подключите ClickHouse и выберите какие данные куда загружать</p>
       </div>
 
       {/* ClickHouse Connection */}
@@ -138,7 +219,7 @@ export default function IntegrationsPage() {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Database className="w-5 h-5 text-amber-400" />
-              ClickHouse
+              Подключение к ClickHouse
             </CardTitle>
             <Badge variant={
               connectionStatus === 'connected' ? 'green' : 
@@ -150,8 +231,7 @@ export default function IntegrationsPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Connection Settings */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-slate-400 text-sm mb-2 flex items-center gap-1">
                 <Server size={14} />
@@ -208,15 +288,16 @@ export default function IntegrationsPage() {
                 className="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
               />
             </div>
-            <div className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                id="ssl"
-                checked={config.ssl}
-                onChange={(e) => setConfig({ ...config, ssl: e.target.checked })}
-                className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500"
-              />
-              <label htmlFor="ssl" className="text-slate-300">Использовать SSL</label>
+            <div className="flex items-end">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={config.ssl}
+                  onChange={(e) => setConfig({ ...config, ssl: e.target.checked })}
+                  className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-emerald-500"
+                />
+                <span className="text-slate-300">SSL</span>
+              </label>
             </div>
           </div>
 
@@ -251,152 +332,216 @@ export default function IntegrationsPage() {
         </CardContent>
       </Card>
 
-      {/* Metrics Configuration */}
+      {/* Data Mappings */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              Метрики для Dashboard
-              <div className="relative group">
-                <HelpCircle className="w-4 h-4 text-slate-500 cursor-help" />
-                <div className="absolute z-50 hidden group-hover:block w-72 p-3 text-xs text-white bg-slate-800 rounded-lg shadow-lg left-6 top-0 border border-slate-700">
-                  Настройте SQL-запросы для получения данных из ClickHouse. Результаты будут автоматически отображаться на Dashboard.
-                </div>
-              </div>
+              <Columns className="w-5 h-5 text-blue-400" />
+              Маппинг данных
+              <span className="text-sm font-normal text-slate-400">
+                (откуда → куда)
+              </span>
             </CardTitle>
             <button
               onClick={() => setShowAddForm(true)}
               className="flex items-center gap-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-sm rounded-lg transition-colors"
             >
               <Plus size={16} />
-              Добавить метрику
+              Добавить
             </button>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          
           {/* Add Form */}
           {showAddForm && (
-            <div className="mb-6 p-4 bg-slate-800/50 rounded-lg border border-slate-700">
-              <h3 className="text-white font-medium mb-4">Новая метрика</h3>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Название</label>
-                    <input
-                      type="text"
-                      value={newMetric.name}
-                      onChange={(e) => setNewMetric({ ...newMetric, name: e.target.value })}
-                      placeholder="Например: Активные клиенты"
-                      className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-slate-400 text-sm mb-2">Поле в Dashboard</label>
-                    <select
-                      value={newMetric.targetField}
-                      onChange={(e) => setNewMetric({ ...newMetric, targetField: e.target.value })}
-                      className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                    >
-                      <option value="">Выберите поле...</option>
-                      {targetFields.map(field => (
-                        <option key={field.value} value={field.value}>{field.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
+            <div className="p-4 bg-slate-800/50 rounded-lg border border-emerald-500/30">
+              <h3 className="text-white font-medium mb-4">➕ Новый маппинг</h3>
+              
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 items-end">
+                {/* Source Table */}
                 <div>
-                  <label className="block text-slate-400 text-sm mb-2">SQL Query</label>
-                  <textarea
-                    value={newMetric.query}
-                    onChange={(e) => setNewMetric({ ...newMetric, query: e.target.value })}
-                    rows={3}
-                    placeholder="SELECT count(*) FROM events WHERE ..."
-                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white font-mono text-sm focus:outline-none focus:border-emerald-500"
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={addMetric}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors"
+                  <label className="block text-slate-400 text-sm mb-2 flex items-center gap-1">
+                    <Table size={14} />
+                    Таблица в ClickHouse
+                  </label>
+                  <select
+                    value={newMapping.sourceTable}
+                    onChange={(e) => setNewMapping({ ...newMapping, sourceTable: e.target.value, sourceField: '' })}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500"
                   >
-                    Добавить
-                  </button>
-                  <button
-                    onClick={() => setShowAddForm(false)}
-                    className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
-                  >
-                    Отмена
-                  </button>
+                    <option value="">Выберите таблицу...</option>
+                    {availableTables.map(table => (
+                      <option key={table.name} value={table.name}>{table.label}</option>
+                    ))}
+                  </select>
                 </div>
+
+                {/* Source Field */}
+                <div>
+                  <label className="block text-slate-400 text-sm mb-2">Поле</label>
+                  <select
+                    value={newMapping.sourceField}
+                    onChange={(e) => setNewMapping({ ...newMapping, sourceField: e.target.value })}
+                    disabled={!newMapping.sourceTable}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500 disabled:opacity-50"
+                  >
+                    <option value="">Выберите поле...</option>
+                    {selectedTableFields.map(field => (
+                      <option key={field.name} value={field.name}>{field.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Aggregation */}
+                <div>
+                  <label className="block text-slate-400 text-sm mb-2">Агрегация</label>
+                  <select
+                    value={newMapping.aggregation}
+                    onChange={(e) => setNewMapping({ ...newMapping, aggregation: e.target.value as any })}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    {aggregations.map(agg => (
+                      <option key={agg.value} value={agg.value}>{agg.icon} {agg.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Target Field */}
+                <div>
+                  <label className="block text-slate-400 text-sm mb-2">Поле в Dashboard</label>
+                  <select
+                    value={newMapping.targetField}
+                    onChange={(e) => setNewMapping({ ...newMapping, targetField: e.target.value })}
+                    className="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="">Выберите поле...</option>
+                    {targetFields.map(field => (
+                      <option key={field.value} value={field.value}>{field.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={addMapping}
+                  disabled={!newMapping.sourceTable || !newMapping.sourceField || !newMapping.targetField}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition-colors disabled:opacity-50"
+                >
+                  Добавить
+                </button>
+                <button
+                  onClick={() => setShowAddForm(false)}
+                  className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                >
+                  Отмена
+                </button>
               </div>
             </div>
           )}
 
-          {/* Metrics List */}
-          <div className="space-y-3">
-            {metrics.map(metric => (
+          {/* Mappings List */}
+          <div className="space-y-2">
+            {mappings.map(mapping => (
               <div 
-                key={metric.id}
-                className={`p-4 rounded-lg border transition-colors ${
-                  metric.enabled 
+                key={mapping.id}
+                className={`flex items-center gap-4 p-4 rounded-lg border transition-all ${
+                  mapping.enabled 
                     ? 'bg-slate-800/50 border-slate-700' 
-                    : 'bg-slate-800/20 border-slate-700/50'
+                    : 'bg-slate-800/20 border-slate-700/50 opacity-60'
                 }`}
               >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-2">
-                      <h4 className={`font-medium ${metric.enabled ? 'text-white' : 'text-slate-500'}`}>
-                        {metric.name}
-                      </h4>
-                      <Badge variant={metric.enabled ? 'green' : 'gray'}>
-                        → {targetFields.find(f => f.value === metric.targetField)?.label || metric.targetField}
-                      </Badge>
-                    </div>
-                    <code className={`text-xs block p-2 rounded font-mono ${
-                      metric.enabled ? 'bg-slate-900 text-slate-400' : 'bg-slate-800/50 text-slate-600'
-                    }`}>
-                      {metric.query}
-                    </code>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => toggleMetric(metric.id)}
-                      className={`p-2 rounded-lg transition-colors ${
-                        metric.enabled 
-                          ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
-                          : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
-                      }`}
-                    >
-                      {metric.enabled ? <Check size={16} /> : <X size={16} />}
-                    </button>
-                    <button
-                      onClick={() => removeMetric(metric.id)}
-                      className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
+                {/* Source */}
+                <div className="flex items-center gap-2 min-w-[200px]">
+                  <Badge variant="blue">{getTableLabel(mapping.sourceTable)}</Badge>
+                  <span className="text-slate-400">→</span>
+                  <span className="text-white">{getFieldLabel(mapping.sourceTable, mapping.sourceField)}</span>
+                </div>
+
+                {/* Aggregation */}
+                <Badge variant="purple">
+                  {aggregations.find(a => a.value === mapping.aggregation)?.icon} {mapping.aggregation.toUpperCase()}
+                </Badge>
+
+                {/* Arrow */}
+                <ArrowRight className="text-emerald-500" size={20} />
+
+                {/* Target */}
+                <div className="flex-1">
+                  <Badge variant="green">{getTargetLabel(mapping.targetField)}</Badge>
+                </div>
+
+                {/* Actions */}
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => toggleMapping(mapping.id)}
+                    className={`p-2 rounded-lg transition-colors ${
+                      mapping.enabled 
+                        ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30'
+                        : 'bg-slate-700 text-slate-400 hover:bg-slate-600'
+                    }`}
+                    title={mapping.enabled ? 'Отключить' : 'Включить'}
+                  >
+                    {mapping.enabled ? <Check size={16} /> : <X size={16} />}
+                  </button>
+                  <button
+                    onClick={() => removeMapping(mapping.id)}
+                    className="p-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors"
+                    title="Удалить"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
             ))}
+
+            {mappings.length === 0 && (
+              <div className="text-center py-8 text-slate-400">
+                <Columns size={40} className="mx-auto mb-3 opacity-50" />
+                <p>Нет настроенных маппингов</p>
+                <button
+                  onClick={() => setShowAddForm(true)}
+                  className="mt-2 text-emerald-400 hover:underline"
+                >
+                  + Добавить первый маппинг
+                </button>
+              </div>
+            )}
           </div>
         </CardContent>
       </Card>
 
-      {/* Info Card */}
+      {/* Info */}
       <Card className="border-blue-500/30 bg-blue-500/5">
         <CardContent className="pt-6">
-          <h3 className="text-blue-400 font-medium mb-2">💡 Как работает интеграция</h3>
-          <ul className="text-slate-400 text-sm space-y-2">
-            <li>1. Настройте подключение к ClickHouse (host, порт, учётные данные)</li>
-            <li>2. Добавьте SQL-запросы для каждой метрики, которую хотите отображать</li>
-            <li>3. Выберите поле в Dashboard, куда будет записываться результат</li>
-            <li>4. Данные будут автоматически обновляться каждые 5 минут</li>
-          </ul>
+          <h3 className="text-blue-400 font-medium mb-3">💡 Как это работает</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-slate-400">
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">1️⃣</span>
+              <div>
+                <p className="text-white font-medium">Подключение</p>
+                <p>Укажите данные для подключения к ClickHouse</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">2️⃣</span>
+              <div>
+                <p className="text-white font-medium">Маппинг</p>
+                <p>Выберите таблицу, поле и куда загружать</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="text-2xl">3️⃣</span>
+              <div>
+                <p className="text-white font-medium">Синхронизация</p>
+                <p>Данные обновляются автоматически каждые 5 мин</p>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
   )
 }
-
