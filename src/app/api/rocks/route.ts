@@ -20,16 +20,21 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { title, description, quarter, year, ownerId, dueDate } = body
 
+    // Calculate default due date (end of quarter)
+    const q = quarter || 1
+    const y = year || 2026
+    const defaultDueDate = new Date(y, q * 3, 0) // Last day of quarter
+    
     const rock = await prisma.rock.create({
       data: {
         title,
         description,
-        quarter: quarter || 1,
-        year: year || 2026,
+        quarter: q,
+        year: y,
         status: 'on_track',
         progress: 0,
         ownerId: ownerId || null,
-        dueDate: dueDate ? new Date(dueDate) : null,
+        dueDate: dueDate ? new Date(dueDate) : defaultDueDate,
       },
     })
 
