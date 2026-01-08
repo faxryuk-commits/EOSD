@@ -182,7 +182,7 @@ export default async function CashFlowPage() {
                       -{formatCurrency(item.expenses)}
                     </td>
                     <td className="py-3 px-4 text-right">
-                      <Badge variant={item.netCashFlow >= 0 ? 'success' : 'danger'}>
+                      <Badge variant={item.netCashFlow >= 0 ? 'green' : 'red'}>
                         {item.netCashFlow >= 0 ? '+' : ''}{formatCurrency(item.netCashFlow)}
                       </Badge>
                     </td>
@@ -202,7 +202,7 @@ export default async function CashFlowPage() {
                     -{formatCurrency(data.totalOutflow)}
                   </td>
                   <td className="py-3 px-4 text-right">
-                    <Badge variant={data.totalInflow - data.totalOutflow >= 0 ? 'success' : 'danger'}>
+                    <Badge variant={data.totalInflow - data.totalOutflow >= 0 ? 'green' : 'red'}>
                       {formatCurrency(data.totalInflow - data.totalOutflow)}
                     </Badge>
                   </td>
