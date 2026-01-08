@@ -20,10 +20,10 @@ async function getCashFlowData() {
   // Group by period
   const byPeriod = periods.map(period => {
     const data = monthlyData.filter(d => d.periodId === period.id)
-    const totalRevenue = data.reduce((sum, d) => sum + (d.mrr || 0), 0)
+    const totalRevenue = data.reduce((sum, d) => sum + (d.revenue || 0), 0)
     const totalExpenses = data.reduce((sum, d) => 
-      sum + (d.staffCosts || 0) + (d.marketingCosts || 0) + (d.infrastructureCosts || 0) + 
-      (d.officeCosts || 0) + (d.legalCosts || 0) + (d.travelCosts || 0) + (d.otherCosts || 0), 0)
+      sum + (d.salary || 0) + (d.marketing || 0) + (d.office || 0) + 
+      (d.software || 0) + (d.otherExpenses || 0), 0)
     const netCashFlow = totalRevenue - totalExpenses
 
     return {
@@ -234,7 +234,7 @@ export default async function CashFlowPage() {
                     <span className="text-slate-300">{item.region?.name}</span>
                   </div>
                   <span className="text-emerald-400 font-medium">
-                    +{formatCurrency(item.mrr || 0)}
+                    +{formatCurrency(item.revenue || 0)}
                   </span>
                 </div>
               ))}
@@ -249,11 +249,11 @@ export default async function CashFlowPage() {
           <CardContent>
             <div className="space-y-3">
               {[
-                { label: 'Персонал', value: data.current.data?.reduce((s, d) => s + (d.staffCosts || 0), 0) || 0 },
-                { label: 'Маркетинг', value: data.current.data?.reduce((s, d) => s + (d.marketingCosts || 0), 0) || 0 },
-                { label: 'Инфраструктура', value: data.current.data?.reduce((s, d) => s + (d.infrastructureCosts || 0), 0) || 0 },
-                { label: 'Офис', value: data.current.data?.reduce((s, d) => s + (d.officeCosts || 0), 0) || 0 },
-                { label: 'Прочие', value: data.current.data?.reduce((s, d) => s + (d.otherCosts || 0), 0) || 0 },
+                { label: 'Персонал', value: data.current.data?.reduce((s, d) => s + (d.salary || 0), 0) || 0 },
+                { label: 'Маркетинг', value: data.current.data?.reduce((s, d) => s + (d.marketing || 0), 0) || 0 },
+                { label: 'Софт', value: data.current.data?.reduce((s, d) => s + (d.software || 0), 0) || 0 },
+                { label: 'Офис', value: data.current.data?.reduce((s, d) => s + (d.office || 0), 0) || 0 },
+                { label: 'Прочие', value: data.current.data?.reduce((s, d) => s + (d.otherExpenses || 0), 0) || 0 },
               ].filter(c => c.value > 0).map(category => (
                 <div key={category.label} className="flex items-center justify-between">
                   <span className="text-slate-300">{category.label}</span>
