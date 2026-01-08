@@ -190,7 +190,7 @@ export default function SettingsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">База данных</span>
-                <Badge variant="success">PostgreSQL</Badge>
+                <Badge variant="green">PostgreSQL</Badge>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Фреймворк</span>

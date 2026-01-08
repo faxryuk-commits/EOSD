@@ -84,9 +84,9 @@ export default function IssuesPage() {
   }
 
   const statusBadge = (status: string) => {
-    if (status === 'open') return <Badge variant="danger">Открыт</Badge>
-    if (status === 'discussing') return <Badge variant="warning">Обсуждается</Badge>
-    return <Badge variant="success">Решён</Badge>
+    if (status === 'open') return <Badge variant="red">Открыт</Badge>
+    if (status === 'discussing') return <Badge variant="yellow">Обсуждается</Badge>
+    return <Badge variant="green">Решён</Badge>
   }
 
   const updateStatus = (id: number, newStatus: Issue['status']) => {

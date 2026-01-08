@@ -128,9 +128,9 @@ export default async function UnitEconomicsPage() {
   }
 
   const statusBadge = (status: string) => {
-    if (status === 'good') return <Badge variant="success">✓ Норма</Badge>
-    if (status === 'warning') return <Badge variant="warning">⚠ Внимание</Badge>
-    return <Badge variant="danger">✗ Проблема</Badge>
+    if (status === 'good') return <Badge variant="green">✓ Норма</Badge>
+    if (status === 'warning') return <Badge variant="yellow">⚠ Внимание</Badge>
+    return <Badge variant="red">✗ Проблема</Badge>
   }
 
   return (

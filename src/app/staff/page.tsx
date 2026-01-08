@@ -212,7 +212,7 @@ export default async function StaffPage() {
                     </td>
                     <td className="py-3 px-4 text-center">
                       {person.isActive ? (
-                        <Badge variant="success">
+                        <Badge variant="green">
                           <UserCheck size={14} className="mr-1" />
                           Активен
                         </Badge>
