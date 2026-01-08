@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
         status: 'open',
         ownerId: ownerId || null,
         regionId: regionId || null,
-        mitigation,
+        mitigationPlan: mitigation || null,
       },
     })
 
