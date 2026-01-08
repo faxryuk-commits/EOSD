@@ -33,11 +33,12 @@ async function getPlanFactData() {
   // Combine plan and fact data
   const regionData = regions.map(region => {
     const fact = monthlyData.find(d => d.regionId === region.id)
-    const plan = budgetPlans.find(p => p.regionId === region.id)
+    const revenuePlan = budgetPlans.find(p => p.regionId === region.id && p.category === 'revenue')
+    const clientsPlan = budgetPlans.find(p => p.regionId === region.id && p.category === 'clients')
 
-    const planMRR = plan?.plannedRevenue || (fact?.revenue || 0) * 1.1 // Default: fact + 10%
+    const planMRR = revenuePlan?.planAmount || (fact?.revenue || 0) * 1.1 // Default: fact + 10%
     const factMRR = fact?.revenue || 0
-    const planClients = plan?.plannedClients || (fact?.clientsCount || 0)
+    const planClients = clientsPlan?.planAmount || (fact?.clientsCount || 0)
     const factClients = fact?.clientsCount || 0
 
     const mrrCompletion = planMRR > 0 ? (factMRR / planMRR) * 100 : 0
