@@ -10,6 +10,7 @@ import { DollarSign, Users, TrendingDown, TrendingUp, Timer, Target, AlertTriang
 import { MRRChart } from '@/components/charts/MRRChart'
 import { RegionChart } from '@/components/charts/RegionChart'
 import Link from 'next/link'
+import { seedDatabase } from '@/lib/seed'
 
 async function getDashboardData() {
   // Get latest period (dynamic)
@@ -138,14 +139,11 @@ export default async function Dashboard() {
   const data = await getDashboardData()
 
   if (!data) {
-    return (
-      <div className="flex items-center justify-center min-h-[60vh]">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-white mb-2">Нет данных</h2>
-          <p className="text-surface-400">Запустите seed для создания начальных данных</p>
-        </div>
-      </div>
-    )
+    // Auto-seed if no data
+    await seedDatabase()
+    // Redirect to refresh
+    const { redirect } = await import('next/navigation')
+    redirect('/')
   }
 
   const { period, metrics, revenueByRegion, rocks, warnings } = data
