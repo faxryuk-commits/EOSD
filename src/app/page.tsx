@@ -6,9 +6,10 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { ProgressBar } from '@/components/ui/ProgressBar'
 import { Badge } from '@/components/ui/Badge'
 import { formatCurrency, formatCompact, formatPercent, calculateMoM, calculateARPU, calculateChurnRate, calculateLTV, calculateCAC, calculateRunway } from '@/lib/utils'
-import { DollarSign, Users, TrendingDown, Timer, Target, AlertTriangle } from 'lucide-react'
+import { DollarSign, Users, TrendingDown, TrendingUp, Timer, Target, AlertTriangle, Percent, PieChart } from 'lucide-react'
 import { MRRChart } from '@/components/charts/MRRChart'
 import { RegionChart } from '@/components/charts/RegionChart'
+import Link from 'next/link'
 
 async function getDashboardData() {
   // Get latest period (dynamic)
@@ -93,6 +94,13 @@ async function getDashboardData() {
     take: 4,
   })
 
+  // Get budget plan for Revenue vs Plan
+  const budgetPlan = await prisma.budgetPlan.findMany({
+    where: { periodId: currentPeriod.id, category: 'revenue' },
+  })
+  const plannedRevenue = budgetPlan.reduce((sum, p) => sum + p.planAmount, 0)
+  const revenuePlanAchievement = plannedRevenue > 0 ? (currentTotals.revenue / plannedRevenue) * 100 : 0
+
   // Revenue by region
   const revenueByRegion = currentData.map(d => ({
     name: d.region.name,
@@ -117,6 +125,8 @@ async function getDashboardData() {
       ltvCac,
       cash,
       runway,
+      plannedRevenue,
+      revenuePlanAchievement,
     },
     revenueByRegion,
     rocks,
@@ -138,29 +148,27 @@ export default async function Dashboard() {
     )
   }
 
-  const { metrics, revenueByRegion, rocks, warnings } = data
+  const { period, metrics, revenueByRegion, rocks, warnings } = data
 
   return (
     <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white mb-1">Dashboard</h1>
-          <p className="text-surface-400">Январь 2026 • Обзор ключевых метрик</p>
+          <h1 className="text-3xl font-bold text-white mb-1">📊 Dashboard</h1>
+          <p className="text-surface-400">{period.name} • Обзор ключевых метрик</p>
         </div>
         <div className="flex items-center gap-3">
-          <select className="input">
-            <option>Январь 2026</option>
-            <option>Декабрь 2025</option>
-            <option>Ноябрь 2025</option>
-          </select>
+          <Link href="/data-entry/sales" className="btn-secondary">
+            + Ввод данных
+          </Link>
         </div>
       </div>
 
       {/* KPI Cards Row 1 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="MRR"
+          title="💰 MRR"
           value={formatCompact(metrics.mrr)}
           change={metrics.mrrChange}
           trend={metrics.mrrChange > 0 ? 'up' : metrics.mrrChange < 0 ? 'down' : 'flat'}
@@ -169,23 +177,23 @@ export default async function Dashboard() {
           tooltip="Monthly Recurring Revenue — ежемесячный повторяющийся доход от подписок. Ключевой показатель SaaS."
         />
         <StatCard
-          title="Profit"
+          title="📈 Revenue vs Plan"
+          value={formatCompact(metrics.mrr)}
+          changeLabel={`План: ${metrics.revenuePlanAchievement.toFixed(0)}%`}
+          icon={<PieChart size={20} className="text-blue-500" />}
+          status={metrics.revenuePlanAchievement >= 100 ? 'good' : metrics.revenuePlanAchievement >= 80 ? 'warning' : 'critical'}
+          tooltip="Выполнение плана по выручке. Зелёный > 100%, Жёлтый 80-100%, Красный < 80%."
+        />
+        <StatCard
+          title="💵 Profit"
           value={formatCompact(metrics.profit)}
           changeLabel={`Margin ${formatPercent(metrics.margin)}`}
-          icon={<TrendingDown size={20} className="text-green-500" />}
-          status="good"
+          icon={<TrendingUp size={20} className="text-green-500" />}
+          status={metrics.profit > 0 ? 'good' : 'critical'}
           tooltip="Чистая прибыль = Выручка - Все расходы. Margin показывает процент прибыли от выручки."
         />
         <StatCard
-          title="Clients"
-          value={metrics.clients.toLocaleString()}
-          changeLabel={`+${metrics.newClients} new`}
-          icon={<Users size={20} className="text-blue-500" />}
-          status="good"
-          tooltip="Общее количество активных клиентов. New — количество новых клиентов за месяц."
-        />
-        <StatCard
-          title="Runway"
+          title="⏱️ Runway"
           value={`${metrics.runway} мес`}
           changeLabel={`Cash: ${formatCompact(metrics.cash)}`}
           icon={<Timer size={20} className="text-purple-500" />}
@@ -197,29 +205,35 @@ export default async function Dashboard() {
       {/* KPI Cards Row 2 */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
-          title="ARPU"
-          value={formatCurrency(metrics.arpu)}
+          title="👥 Clients"
+          value={metrics.clients.toLocaleString()}
+          changeLabel={`+${metrics.newClients} new`}
+          icon={<Users size={20} className="text-blue-500" />}
           status="good"
-          tooltip="Average Revenue Per User — средний доход на клиента. ARPU = MRR / Количество клиентов."
+          tooltip="Общее количество активных клиентов. New — количество новых клиентов за месяц."
         />
         <StatCard
-          title="CAC"
-          value={formatCurrency(metrics.cac)}
-          status="good"
-          tooltip="Customer Acquisition Cost — стоимость привлечения клиента. CAC = Маркетинг / Новые клиенты."
+          title="📉 Churn Rate"
+          value={formatPercent(metrics.churnRate)}
+          changeLabel={metrics.churnRate <= 5 ? '✅ Норма' : '⚠️ Высокий'}
+          icon={<TrendingDown size={20} className="text-red-500" />}
+          status={metrics.churnRate <= 5 ? 'good' : metrics.churnRate <= 10 ? 'warning' : 'critical'}
+          tooltip="Процент оттока клиентов за месяц. Здоровый показатель < 5%."
         />
         <StatCard
-          title="LTV"
+          title="💎 LTV"
           value={formatCurrency(Math.round(metrics.ltv))}
+          changeLabel={`CAC: ${formatCurrency(metrics.cac)}`}
+          icon={<Target size={20} className="text-yellow-500" />}
           status="good"
-          tooltip="Lifetime Value — пожизненная ценность клиента. Сколько денег приносит клиент за всё время работы с компанией."
+          tooltip="Lifetime Value — пожизненная ценность клиента. CAC — стоимость привлечения."
         />
         <StatCard
-          title="LTV/CAC"
+          title="📊 LTV/CAC"
           value={`${metrics.ltvCac.toFixed(1)}x`}
           changeLabel={metrics.ltvCac >= 3 ? '✅ Healthy' : '⚠️ Below target'}
           status={metrics.ltvCac >= 3 ? 'good' : 'warning'}
-          tooltip="Соотношение ценности клиента к стоимости привлечения. Здоровый показатель > 3x. Показывает эффективность маркетинга."
+          tooltip="Соотношение ценности клиента к стоимости привлечения. Здоровый показатель > 3x."
         />
       </div>
 
@@ -250,10 +264,15 @@ export default async function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>🎯 Rocks Q1 2026</CardTitle>
-            <Badge variant="blue">{rocks.filter(r => r.status === 'on_track').length}/{rocks.length} On Track</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="blue">{rocks.filter(r => r.status === 'on_track').length}/{rocks.length} On Track</Badge>
+              <Link href="/eos/rocks" className="text-sm text-primary-400 hover:underline">
+                View All →
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {rocks.map((rock) => (
+            {rocks.length > 0 ? rocks.map((rock) => (
               <div key={rock.id} className="flex items-center gap-4">
                 <div className="flex-1">
                   <div className="flex items-center justify-between mb-1">
@@ -270,7 +289,14 @@ export default async function Dashboard() {
                   />
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-4 text-surface-400">
+                <p>Нет активных Rocks</p>
+                <Link href="/eos/rocks" className="text-primary-400 hover:underline text-sm">
+                  + Создать Rock
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -278,10 +304,15 @@ export default async function Dashboard() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>⚠️ Warnings</CardTitle>
-            <Badge variant="red">{warnings.filter(w => w.severity === 'critical').length} Critical</Badge>
+            <div className="flex items-center gap-2">
+              <Badge variant="red">{warnings.filter(w => w.severity === 'critical').length} Critical</Badge>
+              <Link href="/warnings" className="text-sm text-primary-400 hover:underline">
+                View All →
+              </Link>
+            </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {warnings.map((warning) => (
+            {warnings.length > 0 ? warnings.map((warning) => (
               <div 
                 key={warning.id} 
                 className="flex items-start gap-3 p-3 rounded-lg bg-surface-800/50 border border-surface-700/50"
@@ -302,7 +333,14 @@ export default async function Dashboard() {
                   </div>
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-center py-4 text-surface-400">
+                <p>Нет активных предупреждений</p>
+                <Link href="/warnings" className="text-primary-400 hover:underline text-sm">
+                  + Добавить Warning
+                </Link>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
