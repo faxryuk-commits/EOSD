@@ -47,11 +47,24 @@ export async function POST(request: NextRequest) {
     ]
 
     for (const period of periods) {
-      await prisma.period.upsert({
-        where: { year_month: { year: period.year, month: period.month } },
-        update: { name: period.name },
-        create: period,
+      const existing = await prisma.period.findFirst({
+        where: { year: period.year, month: period.month }
       })
+      
+      if (existing) {
+        await prisma.period.update({
+          where: { id: existing.id },
+          data: { name: period.name },
+        })
+      } else {
+        await prisma.period.create({
+          data: {
+            ...period,
+            startDate: new Date(period.year, period.month - 1, 1),
+            endDate: new Date(period.year, period.month, 0),
+          },
+        })
+      }
     }
     results['periods'] = periods.length
 

@@ -33,10 +33,27 @@ export async function POST(request: NextRequest) {
         mrr: mrr || 0,
         contractStart: contractStart ? new Date(contractStart) : new Date(),
         contractEnd: contractEnd ? new Date(contractEnd) : null,
-        healthStatus: healthStatus || 'healthy',
-        churnRisk: churnRisk || 'low',
       },
     })
+    
+    // Create initial health check if status provided
+    if (healthStatus || churnRisk) {
+      // Find current period
+      const currentPeriod = await prisma.period.findFirst({
+        orderBy: { id: 'desc' }
+      })
+      
+      if (currentPeriod) {
+        await prisma.clientHealthCheck.create({
+          data: {
+            clientId: client.id,
+            periodId: currentPeriod.id,
+            healthStatus: healthStatus || 'healthy',
+            churnRisk: churnRisk || 'low',
+          },
+        })
+      }
+    }
 
     return NextResponse.json(client)
   } catch (error) {
