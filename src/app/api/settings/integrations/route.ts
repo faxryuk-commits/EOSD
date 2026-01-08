@@ -13,55 +13,60 @@ export async function GET() {
       }
     })
 
-    const config: Record<string, string> = {}
+    const result: Record<string, any> = {}
     settings.forEach(s => {
-      config[s.key.replace('clickhouse_', '')] = s.value
+      const key = s.key.replace('clickhouse_', '')
+      result[key] = s.value
     })
 
-    return NextResponse.json({ config })
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    // Parse syncOptions if exists
+    if (result.syncOptions) {
+      try {
+        result.syncOptions = JSON.parse(result.syncOptions)
+      } catch {
+        result.syncOptions = { clients: true, revenue: true, orders: false, churn: true }
+      }
+    }
+
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error('Error fetching settings:', error)
+    return NextResponse.json({})
   }
 }
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const { config, metrics } = body
+    const { host, user, password, syncOptions } = await request.json()
 
-    // Save ClickHouse config
-    const configKeys = ['host', 'port', 'database', 'username', 'password', 'ssl']
-    for (const key of configKeys) {
-      if (config[key] !== undefined) {
-        await prisma.settings.upsert({
-          where: { key: `clickhouse_${key}` },
-          update: { value: String(config[key]) },
-          create: { 
-            key: `clickhouse_${key}`, 
-            value: String(config[key]),
-            description: `ClickHouse ${key} configuration`
-          },
-        })
-      }
-    }
+    const saveOps = [
+      prisma.settings.upsert({
+        where: { key: 'clickhouse_host' },
+        update: { value: host || '' },
+        create: { key: 'clickhouse_host', value: host || '' },
+      }),
+      prisma.settings.upsert({
+        where: { key: 'clickhouse_user' },
+        update: { value: user || '' },
+        create: { key: 'clickhouse_user', value: user || '' },
+      }),
+      prisma.settings.upsert({
+        where: { key: 'clickhouse_password' },
+        update: { value: password || '' },
+        create: { key: 'clickhouse_password', value: password || '' },
+      }),
+      prisma.settings.upsert({
+        where: { key: 'clickhouse_syncOptions' },
+        update: { value: JSON.stringify(syncOptions) },
+        create: { key: 'clickhouse_syncOptions', value: JSON.stringify(syncOptions) },
+      }),
+    ]
 
-    // Save metrics config as JSON
-    if (metrics) {
-      await prisma.settings.upsert({
-        where: { key: 'clickhouse_metrics' },
-        update: { value: JSON.stringify(metrics) },
-        create: { 
-          key: 'clickhouse_metrics', 
-          value: JSON.stringify(metrics),
-          description: 'ClickHouse metrics configuration'
-        },
-      })
-    }
+    await prisma.$transaction(saveOps)
 
-    return NextResponse.json({ success: true, message: 'Configuration saved' })
-  } catch (error: any) {
-    console.error('Save error:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('Error saving settings:', error)
+    return NextResponse.json({ error: 'Failed to save' }, { status: 500 })
   }
 }
-
