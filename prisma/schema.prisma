@@ -1,0 +1,593 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+// =====================================================
+// ОСНОВНЫЕ ТАБЛИЦЫ
+// =====================================================
+
+model Region {
+  id          Int      @id @default(autoincrement())
+  name        String
+  code        String   @unique // uz, kz, kg, ge, ae, sa
+  currency    String   @default("USD")
+  color       String   @default("#22c55e")
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  
+  monthlyData MonthlyData[]
+  staff       Staff[]
+  payments    Payment[]
+  budgetPlans BudgetPlan[]
+  warnings    Warning[]
+  topClients  TopClient[]
+}
+
+model Period {
+  id          Int      @id @default(autoincrement())
+  name        String   // "Январь 2026"
+  year        Int
+  month       Int
+  startDate   DateTime
+  endDate     DateTime
+  isClosed    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  monthlyData     MonthlyData[]
+  payments        Payment[]
+  budgetPlans     BudgetPlan[]
+  staffBonuses    StaffBonus[]
+  healthChecks    ClientHealthCheck[]
+  kpiValues       CLevelKPIValue[]
+  scorecardValues WeeklyScorecardValue[]
+}
+
+model MonthlyData {
+  id              Int      @id @default(autoincrement())
+  periodId        Int
+  regionId        Int
+  
+  // Revenue
+  revenue         Float    @default(0)
+  clientsCount    Int      @default(0)
+  newClients      Int      @default(0)
+  churnedClients  Int      @default(0)
+  
+  // Expenses
+  salary          Float    @default(0)
+  marketing       Float    @default(0)
+  office          Float    @default(0)
+  software        Float    @default(0)
+  otherExpenses   Float    @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  period          Period   @relation(fields: [periodId], references: [id])
+  region          Region   @relation(fields: [regionId], references: [id])
+  
+  @@unique([periodId, regionId])
+}
+
+model Settings {
+  id              Int      @id @default(autoincrement())
+  key             String   @unique
+  value           String
+  description     String?
+  updatedAt       DateTime @updatedAt
+}
+
+model ExchangeRate {
+  id              Int      @id @default(autoincrement())
+  fromCurrency    String
+  toCurrency      String
+  rate            Float
+  date            DateTime
+  createdAt       DateTime @default(now())
+  
+  @@unique([fromCurrency, toCurrency, date])
+}
+
+// =====================================================
+// ПЕРСОНАЛ
+// =====================================================
+
+model Staff {
+  id              Int      @id @default(autoincrement())
+  firstName       String
+  lastName        String
+  email           String?  @unique
+  phone           String?
+  position        String
+  department      String?
+  regionId        Int?
+  salary          Float
+  salaryCurrency  String   @default("USD")
+  employmentType  String   @default("full_time")
+  startDate       DateTime
+  endDate         DateTime?
+  status          String   @default("active")
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  region          Region?  @relation(fields: [regionId], references: [id])
+  bonuses         StaffBonus[]
+  salaryHistory   SalaryHistory[]
+  accountabilityRole AccountabilityChart?
+  peopleAnalyzer  PeopleAnalyzer[]
+  rocks           Rock[]
+  issues          Issue[]
+  todos           Todo[]
+  meetings        Meeting[]
+  warnings        Warning[]
+  kpis            CLevelKPI[]
+  healthCheckActions ClientHealthCheck[]
+}
+
+model StaffBonus {
+  id              Int      @id @default(autoincrement())
+  staffId         Int
+  periodId        Int
+  amount          Float
+  bonusType       String?
+  description     String?
+  createdAt       DateTime @default(now())
+  
+  staff           Staff    @relation(fields: [staffId], references: [id])
+  period          Period   @relation(fields: [periodId], references: [id])
+}
+
+model SalaryHistory {
+  id              Int      @id @default(autoincrement())
+  staffId         Int
+  oldSalary       Float?
+  newSalary       Float
+  effectiveDate   DateTime
+  reason          String?
+  createdAt       DateTime @default(now())
+  
+  staff           Staff    @relation(fields: [staffId], references: [id])
+}
+
+// =====================================================
+// CASH FLOW
+// =====================================================
+
+model PaymentCategory {
+  id              Int      @id @default(autoincrement())
+  name            String
+  code            String   @unique
+  type            String   // income, expense
+  parentId        Int?
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  
+  payments        Payment[]
+}
+
+model Payment {
+  id              Int      @id @default(autoincrement())
+  periodId        Int
+  paymentDate     DateTime
+  categoryId      Int
+  type            String   // income, expense
+  amount          Float
+  description     String?
+  counterparty    String?
+  regionId        Int?
+  isRecurring     Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  
+  period          Period   @relation(fields: [periodId], references: [id])
+  category        PaymentCategory @relation(fields: [categoryId], references: [id])
+  region          Region?  @relation(fields: [regionId], references: [id])
+}
+
+// =====================================================
+// БЮДЖЕТ
+// =====================================================
+
+model BudgetPlan {
+  id              Int      @id @default(autoincrement())
+  periodId        Int
+  category        String
+  planAmount      Float
+  regionId        Int?
+  version         Int      @default(1)
+  notes           String?
+  createdAt       DateTime @default(now())
+  
+  period          Period   @relation(fields: [periodId], references: [id])
+  region          Region?  @relation(fields: [regionId], references: [id])
+  
+  @@unique([periodId, category, regionId, version])
+}
+
+// =====================================================
+// ИНВЕСТОРЫ
+// =====================================================
+
+model Investment {
+  id              Int      @id @default(autoincrement())
+  investorName    String
+  amount          Float
+  investmentDate  DateTime
+  round           String?  // seed, series_a, etc.
+  valuation       Float?
+  notes           String?
+  createdAt       DateTime @default(now())
+  
+  capTable        CapTable[]
+}
+
+model CapTable {
+  id              Int      @id @default(autoincrement())
+  investmentId    Int?
+  shareholderName String
+  shareType       String   @default("common")
+  shares          Int
+  percentage      Float
+  notes           String?
+  createdAt       DateTime @default(now())
+  
+  investment      Investment? @relation(fields: [investmentId], references: [id])
+}
+
+// =====================================================
+// EOS - VISION
+// =====================================================
+
+model VTO {
+  id              Int      @id @default(autoincrement())
+  companyId       Int      @default(1)
+  
+  // Core Values
+  coreValues      String?  // JSON array
+  
+  // Core Focus
+  purpose         String?
+  niche           String?
+  
+  // 10-Year Target
+  tenYearTarget   String?
+  tenYearDate     DateTime?
+  
+  // Marketing Strategy
+  targetMarket    String?
+  threeUniques    String?  // JSON array
+  provenProcess   String?
+  guarantee       String?
+  
+  // 3-Year Picture
+  threeYearDate   DateTime?
+  threeYearRevenue Float?
+  threeYearProfit Float?
+  threeYearClients Int?
+  threeYearDetails String? // JSON
+  
+  // 1-Year Plan
+  oneYearDate     DateTime?
+  oneYearRevenue  Float?
+  oneYearProfit   Float?
+  oneYearGoals    String?  // JSON array
+  
+  updatedAt       DateTime @updatedAt
+  
+  @@unique([companyId])
+}
+
+// =====================================================
+// EOS - ROCKS
+// =====================================================
+
+model Rock {
+  id              Int      @id @default(autoincrement())
+  title           String
+  description     String?
+  ownerId         Int?
+  quarter         Int
+  year            Int
+  dueDate         DateTime
+  progress        Int      @default(0)
+  status          String   @default("on_track") // on_track, off_track, done
+  isCompanyRock   Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  owner           Staff?   @relation(fields: [ownerId], references: [id])
+  updates         RockUpdate[]
+}
+
+model RockUpdate {
+  id              Int      @id @default(autoincrement())
+  rockId          Int
+  progress        Int
+  note            String?
+  createdAt       DateTime @default(now())
+  
+  rock            Rock     @relation(fields: [rockId], references: [id])
+}
+
+// =====================================================
+// EOS - SCORECARD
+// =====================================================
+
+model WeeklyScorecard {
+  id              Int      @id @default(autoincrement())
+  metricName      String
+  ownerId         Int?
+  goal            Float
+  goalType        String   @default("gte") // gte, lte, eq
+  unit            String?
+  displayOrder    Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  
+  values          WeeklyScorecardValue[]
+}
+
+model WeeklyScorecardValue {
+  id              Int      @id @default(autoincrement())
+  metricId        Int
+  periodId        Int
+  weekStart       DateTime
+  value           Float?
+  note            String?
+  createdAt       DateTime @default(now())
+  
+  metric          WeeklyScorecard @relation(fields: [metricId], references: [id])
+  period          Period   @relation(fields: [periodId], references: [id])
+  
+  @@unique([metricId, weekStart])
+}
+
+// =====================================================
+// EOS - ISSUES
+// =====================================================
+
+model Issue {
+  id              Int      @id @default(autoincrement())
+  title           String
+  description     String?
+  priority        String   @default("medium") // high, medium, low
+  ownerId         Int?
+  status          String   @default("open") // open, ids_needed, in_progress, solved
+  source          String?
+  resolution      String?
+  resolvedAt      DateTime?
+  createdAt       DateTime @default(now())
+  
+  owner           Staff?   @relation(fields: [ownerId], references: [id])
+}
+
+// =====================================================
+// EOS - TO-DOS
+// =====================================================
+
+model Todo {
+  id              Int      @id @default(autoincrement())
+  title           String
+  ownerId         Int
+  dueDate         DateTime
+  status          String   @default("pending") // pending, done, dropped
+  source          String?
+  sourceId        Int?
+  createdAt       DateTime @default(now())
+  completedAt     DateTime?
+  
+  owner           Staff    @relation(fields: [ownerId], references: [id])
+}
+
+// =====================================================
+// EOS - MEETINGS
+// =====================================================
+
+model Meeting {
+  id              Int      @id @default(autoincrement())
+  meetingDate     DateTime
+  meetingType     String   @default("level_10")
+  
+  segueNotes      String?
+  scorecardNotes  String?
+  rocksNotes      String?
+  headlines       String?  // JSON
+  todosReviewed   String?  // JSON
+  idsIssues       String?  // JSON
+  newTodos        String?  // JSON
+  rating          Int?
+  cascadingMsg    String?
+  
+  startedAt       DateTime?
+  endedAt         DateTime?
+  createdById     Int?
+  
+  createdBy       Staff?   @relation(fields: [createdById], references: [id])
+}
+
+// =====================================================
+// EOS - PEOPLE
+// =====================================================
+
+model AccountabilityChart {
+  id              Int      @id @default(autoincrement())
+  roleName        String
+  roleType        String?  // visionary, integrator, department_head
+  personId        Int?     @unique
+  parentRoleId    Int?
+  responsibilities String? // JSON array
+  createdAt       DateTime @default(now())
+  
+  person          Staff?   @relation(fields: [personId], references: [id])
+}
+
+model PeopleAnalyzer {
+  id              Int      @id @default(autoincrement())
+  personId        Int
+  quarter         Int
+  year            Int
+  
+  cvRatings       String?  // JSON
+  getsIt          String?  // Y, N, Y/N
+  wantsIt         String?
+  capacity        String?
+  
+  overallFit      String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  
+  person          Staff    @relation(fields: [personId], references: [id])
+  
+  @@unique([personId, quarter, year])
+}
+
+// =====================================================
+// C-LEVEL KPI
+// =====================================================
+
+model CLevelKPI {
+  id              Int      @id @default(autoincrement())
+  role            String   // ceo, coo, cfo, cto
+  metricName      String
+  metricKey       String
+  goal            Float
+  goalType        String   @default("gte")
+  weight          Int      @default(100)
+  isActive        Boolean  @default(true)
+  ownerId         Int?
+  createdAt       DateTime @default(now())
+  
+  owner           Staff?   @relation(fields: [ownerId], references: [id])
+  values          CLevelKPIValue[]
+}
+
+model CLevelKPIValue {
+  id              Int      @id @default(autoincrement())
+  kpiId           Int
+  periodId        Int
+  planValue       Float?
+  factValue       Float?
+  achievement     Float?
+  note            String?
+  createdAt       DateTime @default(now())
+  
+  kpi             CLevelKPI @relation(fields: [kpiId], references: [id])
+  period          Period   @relation(fields: [periodId], references: [id])
+  
+  @@unique([kpiId, periodId])
+}
+
+// =====================================================
+// TOP CLIENTS
+// =====================================================
+
+model TopClient {
+  id              Int      @id @default(autoincrement())
+  name            String
+  regionId        Int
+  mrr             Float
+  contractStart   DateTime?
+  contractEnd     DateTime?
+  tariff          String?
+  contactName     String?
+  contactEmail    String?
+  contactPhone    String?
+  notes           String?
+  createdAt       DateTime @default(now())
+  
+  region          Region   @relation(fields: [regionId], references: [id])
+  healthChecks    ClientHealthCheck[]
+  interactions    ClientInteraction[]
+}
+
+model ClientHealthCheck {
+  id              Int      @id @default(autoincrement())
+  clientId        Int
+  periodId        Int
+  
+  usageScore      Int?
+  paymentScore    Int?
+  supportScore    Int?
+  engagementScore Int?
+  satisfactionScore Int?
+  
+  healthStatus    String?  // healthy, at_risk, critical
+  churnRisk       String?  // low, medium, high
+  
+  actionRequired  String?
+  actionOwnerId   Int?
+  actionDueDate   DateTime?
+  
+  notes           String?
+  createdAt       DateTime @default(now())
+  
+  client          TopClient @relation(fields: [clientId], references: [id])
+  period          Period   @relation(fields: [periodId], references: [id])
+  actionOwner     Staff?   @relation(fields: [actionOwnerId], references: [id])
+  
+  @@unique([clientId, periodId])
+}
+
+model ClientInteraction {
+  id              Int      @id @default(autoincrement())
+  clientId        Int
+  interactionType String   // call, email, meeting, support
+  summary         String?
+  outcome         String?  // positive, neutral, negative
+  nextStep        String?
+  interactionDate DateTime
+  createdAt       DateTime @default(now())
+  
+  client          TopClient @relation(fields: [clientId], references: [id])
+}
+
+// =====================================================
+// WARNINGS
+// =====================================================
+
+model Warning {
+  id              Int      @id @default(autoincrement())
+  title           String
+  description     String?
+  category        String   // financial, operational, market, team, tech, legal
+  severity        String   // critical, high, medium, low
+  probability     String?  // high, medium, low
+  impact          String?  // high, medium, low
+  
+  ownerId         Int?
+  regionId        Int?
+  
+  status          String   @default("open") // open, monitoring, mitigating, resolved
+  
+  mitigationPlan  String?
+  mitigationStatus String?
+  
+  identifiedDate  DateTime @default(now())
+  dueDate         DateTime?
+  resolvedDate    DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  owner           Staff?   @relation(fields: [ownerId], references: [id])
+  region          Region?  @relation(fields: [regionId], references: [id])
+  updates         WarningUpdate[]
+}
+
+model WarningUpdate {
+  id              Int      @id @default(autoincrement())
+  warningId       Int
+  updateType      String?
+  oldValue        String?
+  newValue        String?
+  note            String?
+  createdAt       DateTime @default(now())
+  
+  warning         Warning  @relation(fields: [warningId], references: [id])
+}
+
