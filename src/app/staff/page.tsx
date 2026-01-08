@@ -9,10 +9,10 @@ import { Users, Plus, Briefcase, DollarSign, MapPin, UserCheck, UserX } from 'lu
 async function getStaffData() {
   const staff = await prisma.staff.findMany({
     include: { region: true },
-    orderBy: [{ isActive: true }, { department: 'asc' }, { name: 'asc' }],
+    orderBy: [{ status: 'asc' }, { department: 'asc' }, { firstName: 'asc' }],
   })
 
-  const activeStaff = staff.filter(s => s.isActive)
+  const activeStaff = staff.filter(s => s.status === 'active')
   const totalSalary = activeStaff.reduce((sum, s) => sum + (s.salary || 0), 0)
   
   // Group by department
@@ -211,13 +211,13 @@ export default async function StaffPage() {
                       {formatCurrency(person.salary || 0)}
                     </td>
                     <td className="py-3 px-4 text-center">
-                      {person.isActive ? (
+                      {person.status === 'active' ? (
                         <Badge variant="green">
                           <UserCheck size={14} className="mr-1" />
                           Активен
                         </Badge>
                       ) : (
-                        <Badge variant="secondary">
+                        <Badge variant="gray">
                           <UserX size={14} className="mr-1" />
                           Неактивен
                         </Badge>
