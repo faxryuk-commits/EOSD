@@ -110,56 +110,62 @@ export default function IssuesPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card 
-          className={`cursor-pointer transition-all ${filter === 'open' ? 'ring-2 ring-red-500' : ''}`}
+        <div 
+          className={`cursor-pointer transition-all ${filter === 'open' ? 'ring-2 ring-red-500 rounded-xl' : ''}`}
           onClick={() => setFilter(filter === 'open' ? 'all' : 'open')}
         >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Открытые</p>
-                <p className="text-2xl font-bold text-red-400">{stats.open}</p>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">Открытые</p>
+                  <p className="text-2xl font-bold text-red-400">{stats.open}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-red-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card 
-          className={`cursor-pointer transition-all ${filter === 'discussing' ? 'ring-2 ring-amber-500' : ''}`}
+        <div 
+          className={`cursor-pointer transition-all ${filter === 'discussing' ? 'ring-2 ring-amber-500 rounded-xl' : ''}`}
           onClick={() => setFilter(filter === 'discussing' ? 'all' : 'discussing')}
         >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Обсуждаются</p>
-                <p className="text-2xl font-bold text-amber-400">{stats.discussing}</p>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">Обсуждаются</p>
+                  <p className="text-2xl font-bold text-amber-400">{stats.discussing}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
+                  <Clock className="w-6 h-6 text-amber-400" />
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center">
-                <Clock className="w-6 h-6 text-amber-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card 
-          className={`cursor-pointer transition-all ${filter === 'solved' ? 'ring-2 ring-emerald-500' : ''}`}
+        <div 
+          className={`cursor-pointer transition-all ${filter === 'solved' ? 'ring-2 ring-emerald-500 rounded-xl' : ''}`}
           onClick={() => setFilter(filter === 'solved' ? 'all' : 'solved')}
         >
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-slate-400 text-sm">Решены</p>
-                <p className="text-2xl font-bold text-emerald-400">{stats.solved}</p>
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-slate-400 text-sm">Решены</p>
+                  <p className="text-2xl font-bold text-emerald-400">{stats.solved}</p>
+                </div>
+                <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-emerald-400" />
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-emerald-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
       {/* Issues List */}
