@@ -198,10 +198,10 @@ export default async function StaffPage() {
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center">
                           <span className="text-sm font-medium text-white">
-                            {person.name.charAt(0)}
+                            {person.firstName.charAt(0)}
                           </span>
                         </div>
-                        <span className="text-white font-medium">{person.name}</span>
+                        <span className="text-white font-medium">{person.firstName} {person.lastName}</span>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-slate-300">{person.position || '-'}</td>
