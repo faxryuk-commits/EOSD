@@ -144,6 +144,7 @@ export default async function Dashboard() {
     // Redirect to refresh
     const { redirect } = await import('next/navigation')
     redirect('/')
+    return null // TypeScript needs this
   }
 
   const { period, metrics, revenueByRegion, rocks, warnings } = data
