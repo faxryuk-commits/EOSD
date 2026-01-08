@@ -16,6 +16,7 @@ import {
   Trophy,
   Settings,
   ChevronDown,
+  Upload,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useState } from 'react'
@@ -88,6 +89,11 @@ const navigation: NavItem[] = [
     label: 'Warnings',
     href: '/warnings',
     icon: <AlertTriangle size={20} />,
+  },
+  {
+    label: 'Импорт',
+    href: '/import',
+    icon: <Upload size={20} />,
   },
   {
     label: 'Настройки',
