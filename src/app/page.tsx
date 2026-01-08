@@ -196,7 +196,7 @@ export default async function Dashboard() {
         />
         <StatCard
           title="LTV"
-          value={formatCompact(metrics.ltv)}
+          value={formatCurrency(Math.round(metrics.ltv))}
           status="good"
         />
         <StatCard

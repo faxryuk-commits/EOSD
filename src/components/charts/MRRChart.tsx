@@ -1,18 +1,22 @@
 'use client'
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from 'recharts'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
-// Sample data - in real app, this would come from API
-const data = [
-  { month: 'Авг', mrr: 90000 },
-  { month: 'Сен', mrr: 98000 },
-  { month: 'Окт', mrr: 113000 },
-  { month: 'Ноя', mrr: 119000 },
-  { month: 'Дек', mrr: 123500 },
-  { month: 'Янв', mrr: 127000 },
+interface MRRChartProps {
+  data?: { month: string; mrr: number }[]
+}
+
+// Default data based on Excel file
+const defaultData = [
+  { month: 'Авг', mrr: 41123 },
+  { month: 'Сен', mrr: 43108 },
+  { month: 'Окт', mrr: 46758 },
+  { month: 'Ноя', mrr: 49544 },
+  { month: 'Дек', mrr: 55740 },
+  { month: 'Янв', mrr: 66076 },
 ]
 
-export function MRRChart() {
+export function MRRChart({ data = defaultData }: MRRChartProps) {
   return (
     <div className="h-[300px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -59,4 +63,3 @@ export function MRRChart() {
     </div>
   )
 }
-
